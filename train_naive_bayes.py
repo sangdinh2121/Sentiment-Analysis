@@ -1,14 +1,24 @@
 import pandas as pd
+import pickle
+from pathlib import Path
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
+<<<<<<< HEAD
+# [Code cũ của bạn]: Đọc dữ liệu đã qua tiền xử lý
+=======
 # Đọc dữ liệu đã qua tiền xử lý
+>>>>>>> 86c8cc11bdb94adf7f330ef29a94c96a4d233506
 train = pd.read_csv("data/processed/Train.csv")
 dev = pd.read_csv("data/processed/Dev.csv")
 test = pd.read_csv("data/processed/Test.csv")
 
+<<<<<<< HEAD
+# [Code cũ của bạn]: Khởi tạo TF-IDF Vectorizer
+=======
 # Khởi tạo TF-IDF Vectorizer
+>>>>>>> 86c8cc11bdb94adf7f330ef29a94c96a4d233506
 tfidf = TfidfVectorizer(
     lowercase=True,
     ngram_range=(1, 2),
@@ -16,17 +26,31 @@ tfidf = TfidfVectorizer(
     max_features=10000  # Giữ lại 10.000 từ vựng quan trọng nhất để chạy nhanh và nhẹ
 )
 
+<<<<<<< HEAD
+# [Code cũ của bạn]: Chuyển đổi text sang ma trận đặc trưng
+=======
 # Chuyển đổi text sang ma trận đặc trưng
+>>>>>>> 86c8cc11bdb94adf7f330ef29a94c96a4d233506
 X_train = tfidf.fit_transform(train["comment"].astype(str))
 X_dev = tfidf.transform(dev["comment"].astype(str))
 X_test = tfidf.transform(test["comment"].astype(str))
 
+<<<<<<< HEAD
+# [Code cũ của bạn]: In kích thước ma trận
+=======
 # In kích thước ma trận
+>>>>>>> 86c8cc11bdb94adf7f330ef29a94c96a4d233506
 print("Kích thước ma trận TF-IDF:")
 print(f"Train: {X_train.shape}, Dev: {X_dev.shape}, Test: {X_test.shape}")
 
 
+<<<<<<< HEAD
+# =====================================================================
+# === BẮT ĐẦU PHẦN VIẾT TIẾP: HUẤN LUYỆN VÀ ĐÁNH GIÁ NAIVE BAYES ===
+# =====================================================================
+=======
 # HUẤN LUYỆN VÀ ĐÁNH GIÁ NAIVE BAYES
+>>>>>>> 86c8cc11bdb94adf7f330ef29a94c96a4d233506
 
 # 1. Lấy cột nhãn cảm xúc y (Negative, Neutral, Positive) từ file đã tiền xử lý
 y_train = train["sentiment"]
@@ -45,7 +69,13 @@ print(f"Độ chính xác trên tập DEV: {accuracy_score(y_dev, y_dev_pred) * 
 # 4. Dự đoán và đánh giá toàn diện trên tập TEST
 y_test_pred = model.predict(X_test)
 
+<<<<<<< HEAD
+print("\n==============================================")
 print("===== KẾT QUẢ ĐÁNH GIÁ TRÊN TẬP TEST =====")
+print("==============================================")
+=======
+print("===== KẾT QUẢ ĐÁNH GIÁ TRÊN TẬP TEST =====")
+>>>>>>> 86c8cc11bdb94adf7f330ef29a94c96a4d233506
 print(f"Độ chính xác (Accuracy): {accuracy_score(y_test, y_test_pred) * 100:.2f}%")
 
 print("\nBáo cáo chi tiết (Precision, Recall, F1-score theo từng nhãn):")
@@ -57,7 +87,28 @@ cm = confusion_matrix(y_test, y_test_pred, labels=labels)
 print(pd.DataFrame(cm, index=[f"Thực tế_{l}" for l in labels], columns=[f"Dự đoán_{l}" for l in labels]))
 
 
+<<<<<<< HEAD
+# =====================================================================
+# === LƯU MÔ HÌNH VÀ TF-IDF VECTORIZER RA FILE ===
+# =====================================================================
+saved_dir = Path("saved_models")
+saved_dir.mkdir(parents=True, exist_ok=True)
+
+with open(saved_dir / "naive_bayes_model.pkl", "wb") as f:
+    pickle.dump(model, f)
+
+with open(saved_dir / "tfidf_vectorizer.pkl", "wb") as f:
+    pickle.dump(tfidf, f)
+
+print(f"\nĐã lưu model và tfidf tại thư mục: {saved_dir.resolve()}")
+
+
+# =====================================================================
 # === THỬ NGHIỆM DỰ ĐOÁN VỚI CÂU REVIEW MỚI BẤT KỲ ===
+# =====================================================================
+=======
+# === THỬ NGHIỆM DỰ ĐOÁN VỚI CÂU REVIEW MỚI BẤT KỲ ===
+>>>>>>> 86c8cc11bdb94adf7f330ef29a94c96a4d233506
 def predict_review(text):
     """Hàm nhập một câu review bất kỳ và in kết quả dự đoán."""
     text_vec = tfidf.transform([str(text)])
