@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-""" Run: %run /content/Sentiment-Analysis/sentiment_analysis_phobert.py """
+""" Run: %run /content/Sentiment-Analysis/phoBert.py """
 
 import importlib.util
 import subprocess
@@ -16,17 +15,18 @@ packages = {
     "datasets": "datasets",
     "tqdm": "tqdm",
 }
-
+# check xem cai thu vien nay chua, neu thieu auto set = pip 
 missing = [
     package
     for module, package in packages.items()
     if importlib.util.find_spec(module) is None
 ]
-
 if missing:
     subprocess.check_call([
         sys.executable, "-m", "pip", "install", "-q", *missing
     ])
+
+    
 from pathlib import Path
 import json
 import re
@@ -54,10 +54,7 @@ from transformers import (
 )
 
 
-# ---------------------------------------------------------------------
 # Configuration
-# ---------------------------------------------------------------------
-
 PROJECT_PATH = Path(__file__).resolve().parent
 DATA_PATH = PROJECT_PATH / "data" / "processed"
 MODEL_NAME = "vinai/phobert-base"
@@ -75,17 +72,14 @@ MIN_POSITIVES_FOR_TUNING = 5
 THRESHOLD_CANDIDATES = np.arange(0.10, 0.901, 0.025)
 
 
-# ---------------------------------------------------------------------
-# Data loading and validation
-# ---------------------------------------------------------------------
-
+# Data loading + validation : dùng để lấy các mẫu trong dấu {}
 def extract_labels(label_text):
     """Extract labels enclosed in braces from a CSV label cell."""
     if pd.isna(label_text):
         return []
     return re.findall(r"\{([^{}]+)\}", str(label_text))
 
-
+# hàm này đọc train test dev
 def load_data():
     """Load train/dev/test CSVs and validate their expected columns."""
     paths = {
@@ -114,7 +108,7 @@ def load_data():
 
     return data["train"], data["dev"], data["test"]
 
-
+# lấy list cột label của train dev test rồi check để train không có nhãn chưa biết
 def prepare_labels(train_df, dev_df, test_df):
     """Fit label binarizer on Train only and validate Dev/Test labels."""
     y_train_list = train_df["label"].apply(extract_labels).tolist()
@@ -153,9 +147,8 @@ def prepare_labels(train_df, dev_df, test_df):
     return mlb, y_train, y_dev, y_test
 
 
-# ---------------------------------------------------------------------
-# Dataset and preprocessing
-# ---------------------------------------------------------------------
+ 
+# Dataset + preprocessing
 
 class PhoBERTDataset(Dataset):
     """Tokenize each example on demand to avoid storing all tensors in RAM."""
@@ -183,16 +176,16 @@ class PhoBERTDataset(Dataset):
         return item
 
 
-# ---------------------------------------------------------------------
-# Metrics and threshold optimization
-# ---------------------------------------------------------------------
 
+# Metrics + threshold optimization
+
+# hàm này chuyển logits = 0;1
 def sigmoid_np(logits):
     """Numerically stable enough sigmoid for model logits."""
     logits = np.clip(np.asarray(logits), -50, 50)
     return 1.0 / (1.0 + np.exp(-logits))
 
-
+#predict > 0.5 =1 else = 0
 def compute_metrics(eval_pred):
     """Trainer metrics at the default 0.5 threshold."""
     logits, labels = eval_pred
@@ -263,9 +256,9 @@ def print_metrics(title, y_true, y_pred):
     print(f"Subset Accuracy: {accuracy_score(y_true, y_pred):.4f}")
 
 
-# ---------------------------------------------------------------------
+
 # Main training pipeline
-# ---------------------------------------------------------------------
+
 
 def main():
     print("PyTorch:", torch.__version__)
@@ -273,7 +266,7 @@ def main():
     if torch.cuda.is_available():
         print("GPU:", torch.cuda.get_device_name(0))
     else:
-        print("Chưa bật GPU; huấn luyện có thể rất chậm.")
+        print("Chưa bật GPU; huấn luyện chậm.")
 
     train_df, dev_df, test_df = load_data()
     mlb, y_train, y_dev, y_test = prepare_labels(train_df, dev_df, test_df)
@@ -281,7 +274,7 @@ def main():
     label2id = {label: i for i, label in enumerate(mlb.classes_)}
     id2label = {i: label for label, i in label2id.items()}
 
-    print("\nĐang tải tokenizer và PhoBERT...")
+    print("\nĐang tải tokenizer và PhoBERT")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, use_fast=False)
     model = AutoModelForSequenceClassification.from_pretrained(
         MODEL_NAME,
@@ -348,7 +341,7 @@ def main():
     tokenizer.save_pretrained(str(MODEL_OUTPUT_PATH))
     print("Đã lưu mô hình tại:", MODEL_OUTPUT_PATH)
 
-    # Select thresholds using Dev only. Test is used for final evaluation.
+    
     dev_output = trainer.predict(dev_dataset)
     test_output = trainer.predict(test_dataset)
 
